@@ -10,6 +10,9 @@ import static org.quartz.JobBuilder.*;
 import static org.quartz.TriggerBuilder.*;
 import static org.quartz.SimpleScheduleBuilder.*;
 
+/**
+ * 1. Quartz [#175122]
+ */
 public class AlertRabbit {
     public static void main(String[] args) {
         AlertRabbit alertRabbit = new AlertRabbit();
