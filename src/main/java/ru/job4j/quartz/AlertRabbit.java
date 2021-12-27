@@ -26,19 +26,13 @@ public class AlertRabbit {
         return properties;
     }
 
-    private static Connection initConnection(Properties properties) {
-        Connection connection = null;
-        try {
-            Class.forName(properties.getProperty("jdbc.driver"));
-            connection = DriverManager.getConnection(
-                    properties.getProperty("jdbc.url"),
-                    properties.getProperty("jdbc.username"),
-                    properties.getProperty("jdbc.password")
-            );
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return connection;
+    private static Connection initConnection(Properties properties) throws ClassNotFoundException, SQLException {
+        Class.forName(properties.getProperty("jdbc.driver"));
+        return DriverManager.getConnection(
+                properties.getProperty("jdbc.url"),
+                properties.getProperty("jdbc.username"),
+                properties.getProperty("jdbc.password")
+        );
     }
 
     private static void createTable(Connection connection) {
