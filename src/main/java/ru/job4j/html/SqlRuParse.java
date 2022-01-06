@@ -4,8 +4,11 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import ru.job4j.Post;
+import ru.job4j.grabber.utils.SqlRuDateTimeParser;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 
 /**
  * 2. Парсинг HTML страницы. [#260358]
@@ -18,10 +21,19 @@ public class SqlRuParse {
             Elements row = doc.select(".postslisttopic");
             for (Element td : row) {
                 Element href = td.child(0);
-                System.out.println(href.attr("href"));
-                System.out.println(href.text());
-                System.out.println(td.parent().child(5).text());
+                String link = href.attr("href");
+                Post post = detail(link);
             }
         }
+    }
+
+    public static Post detail(String link) throws IOException {
+        Document vacancy = Jsoup.connect(link).get();
+        String title = vacancy.select(".messageHeader").get(0).text();
+        String description = vacancy.select(".msgBody").get(1).text();
+        SqlRuDateTimeParser dateTimeParser = new SqlRuDateTimeParser();
+        String dateTimeString = vacancy.select(".msgFooter").get(0).text().split(" \\[")[0];
+        LocalDateTime created = dateTimeParser.parse(dateTimeString);
+        return new Post(title, link, description, created);
     }
 }
