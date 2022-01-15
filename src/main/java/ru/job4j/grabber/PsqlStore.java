@@ -36,13 +36,19 @@ public class PsqlStore implements Store, AutoCloseable {
     public void save(Post post) {
         try {
             PreparedStatement statement = cnn.prepareStatement(
-                    "insert into post (name, text, link, created) values (?, ?, ?, ?)"
+                    "insert into post (name, text, link, created) values (?, ?, ?, ?),",
+                    Statement.RETURN_GENERATED_KEYS
             );
             statement.setString(1, post.getTitle());
             statement.setString(2, post.getDescription());
             statement.setString(3, post.getLink());
             statement.setTimestamp(4, Timestamp.valueOf(post.getCreated()));
             statement.execute();
+            try (ResultSet generatedId = statement.getGeneratedKeys()) {
+                if (generatedId.next()) {
+                    post.setId(generatedId.getInt(1));
+                }
+            }
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
@@ -57,12 +63,7 @@ public class PsqlStore implements Store, AutoCloseable {
             );
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
-                posts.add(new Post(
-                        resultSet.getString("name"),
-                        resultSet.getString("link"),
-                        resultSet.getString("text"),
-                        resultSet.getTimestamp("created").toLocalDateTime()
-                ));
+                posts.add(createPost(resultSet));
             }
         } catch (SQLException throwables) {
             throwables.printStackTrace();
@@ -93,13 +94,8 @@ public class PsqlStore implements Store, AutoCloseable {
             statement.setInt(1, id);
             ResultSet resultSet = statement.executeQuery();
             if (resultSet.next()) {
-                post = new Post(
-                        resultSet.getInt("id"),
-                        resultSet.getString("name"),
-                        resultSet.getString("link"),
-                        resultSet.getString("text"),
-                        resultSet.getTimestamp("created").toLocalDateTime()
-                );
+                post = createPost(resultSet);
+
             } else {
                 System.out.println("Записи с данным id не обнаружено");
             }
@@ -145,5 +141,20 @@ public class PsqlStore implements Store, AutoCloseable {
             e.printStackTrace();
         }
         return properties;
+    }
+
+    private static Post createPost(ResultSet resultSet) {
+        Post post = null;
+        try {
+            post = new Post(
+                    resultSet.getInt("id"),
+                    resultSet.getString("name"),
+                    resultSet.getString("link"),
+                    resultSet.getString("text"),
+                    resultSet.getTimestamp("created").toLocalDateTime());
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return post;
     }
 }
