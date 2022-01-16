@@ -48,8 +48,10 @@ public class PsqlStoreTest {
 
     @Test
     public void whenSaveAndGetPostSame() {
-        Post post = new Post("title", "link", "description", LocalDateTime.of(2021, 12, 24, 14, 55));
-        Post post2 = new Post("title2", "link2", "description2", LocalDateTime.of(2021, 12, 24, 14, 55));
+        Post post = new Post("title", "link", "description",
+                LocalDateTime.of(2021, 12, 24, 14, 55));
+        Post post2 = new Post("title2", "link2", "description2",
+                LocalDateTime.of(2021, 12, 24, 14, 55));
         psqlStore.save(post);
         psqlStore.save(post2);
         assertThat(post, is(psqlStore.findById(post.getId())));

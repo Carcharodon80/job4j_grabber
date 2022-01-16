@@ -34,11 +34,9 @@ public class PsqlStore implements Store, AutoCloseable {
 
     @Override
     public void save(Post post) {
-        try {
-            PreparedStatement statement = cnn.prepareStatement(
-                    "insert into post (name, text, link, created) values (?, ?, ?, ?);",
-                    Statement.RETURN_GENERATED_KEYS
-            );
+        try (PreparedStatement statement = cnn.prepareStatement(
+                "insert into post (name, text, link, created) values (?, ?, ?, ?);",
+                Statement.RETURN_GENERATED_KEYS)) {
             statement.setString(1, post.getTitle());
             statement.setString(2, post.getDescription());
             statement.setString(3, post.getLink());
@@ -57,11 +55,8 @@ public class PsqlStore implements Store, AutoCloseable {
     @Override
     public List<Post> getAll() {
         List<Post> posts = new ArrayList<>();
-        try {
-            PreparedStatement statement = cnn.prepareStatement(
-                    "select * from post"
-            );
-            ResultSet resultSet = statement.executeQuery();
+        try (PreparedStatement statement = cnn.prepareStatement("select * from post");
+             ResultSet resultSet = statement.executeQuery()) {
             while (resultSet.next()) {
                 posts.add(createPost(resultSet));
             }
@@ -72,13 +67,11 @@ public class PsqlStore implements Store, AutoCloseable {
     }
 
     public void deleteAllAndRestartId() {
-        try {
-            PreparedStatement statement = cnn.prepareStatement(
-                    "delete from post;"
-            );
-            statement.execute();
-            statement = cnn.prepareStatement("alter sequence \"post_id_seq\" restart with 1");
-            statement.execute();
+        try (PreparedStatement statementClear = cnn.prepareStatement("delete from post;");
+             PreparedStatement statementRestartId = cnn.prepareStatement(
+                     "alter sequence \"post_id_seq\" restart with 1")) {
+            statementClear.execute();
+            statementRestartId.execute();
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
@@ -87,17 +80,15 @@ public class PsqlStore implements Store, AutoCloseable {
     @Override
     public Post findById(int id) {
         Post post = null;
-        try {
-            PreparedStatement statement = cnn.prepareStatement(
-                    "select * from post where id = ?;"
-            );
+        try (PreparedStatement statement = cnn.prepareStatement(
+                "select * from post where id = ?;")) {
             statement.setInt(1, id);
-            ResultSet resultSet = statement.executeQuery();
-            if (resultSet.next()) {
-                post = createPost(resultSet);
-
-            } else {
-                System.out.println("Записи с данным id не обнаружено");
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    post = createPost(resultSet);
+                } else {
+                    System.out.println("Записи с данным id не обнаружено");
+                }
             }
         } catch (SQLException throwables) {
             throwables.printStackTrace();
