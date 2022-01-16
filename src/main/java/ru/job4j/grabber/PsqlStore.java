@@ -36,7 +36,7 @@ public class PsqlStore implements Store, AutoCloseable {
     public void save(Post post) {
         try {
             PreparedStatement statement = cnn.prepareStatement(
-                    "insert into post (name, text, link, created) values (?, ?, ?, ?),",
+                    "insert into post (name, text, link, created) values (?, ?, ?, ?);",
                     Statement.RETURN_GENERATED_KEYS
             );
             statement.setString(1, post.getTitle());
@@ -156,5 +156,9 @@ public class PsqlStore implements Store, AutoCloseable {
             throwables.printStackTrace();
         }
         return post;
+    }
+
+    public Connection getCnn() {
+        return cnn;
     }
 }
