@@ -34,6 +34,7 @@ public class PsqlStore implements Store, AutoCloseable {
 
     @Override
     public void save(Post post) {
+        createTable();
         try (PreparedStatement statement = cnn.prepareStatement(
                 "insert into post (name, text, link, created) values (?, ?, ?, ?);",
                 Statement.RETURN_GENERATED_KEYS)) {
@@ -151,5 +152,20 @@ public class PsqlStore implements Store, AutoCloseable {
 
     public Connection getCnn() {
         return cnn;
+    }
+
+    private void createTable() {
+        try (PreparedStatement statement = cnn.prepareStatement(
+                "create table if not exists post (\n"
+                        + "\tid serial primary key,\n"
+                        + "\tname text,\n"
+                        + "\ttext text,\n"
+                        + "\tlink text unique,\n"
+                        + "\tcreated timestamp\n"
+                        + ");")) {
+            statement.execute();
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
     }
 }
